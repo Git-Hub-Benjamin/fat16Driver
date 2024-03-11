@@ -8,7 +8,7 @@ git commit -m "<commit message>"
 git remote set-url origin git@github.com:Git-Hub-Benjamin/fat16Driver.git
 
 // push to a specific branch
-git push -u origin <branch>
+git push -u origin <branch> ex main
 
 // over write main with master?
 git push -f origin master:main
