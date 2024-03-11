@@ -1,0 +1,14 @@
+// stage all
+git add .
+
+// commit all
+git commit -m "<commit message>"
+
+// idk what this does but do it
+git remote set-url origin git@github.com:Git-Hub-Benjamin/fat16Driver.git
+
+// push to a specific branch
+git push -u origin <branch>
+
+// over write main with master?
+git push -f origin master:main
