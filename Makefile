@@ -8,10 +8,9 @@ all: ./bin/boot.bin ./bin/kernel.bin
 	dd if=./bin/kernel.bin >> ./bin/os.bin
 	dd if=/dev/zero bs=1048576 count=16 >> ./bin/os.bin
 	sudo mount -t vfat ./bin/os.bin /mnt/d
-	# Create the data folder if it doesn't exist
 	sudo mkdir -p /mnt/d/data
-	# Copy hello.txt into the test folder
 	sudo cp ./hello.txt /mnt/d/data
+	sudo cp ./bello.txt /mnt/d/data
 	sudo umount /mnt/d
 
 ./bin/kernel.bin: $(FILES)

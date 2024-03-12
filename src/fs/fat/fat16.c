@@ -599,6 +599,13 @@ int fat16_resolve(struct disk* disk)
         tempDataAccess->dataStartSect = tempDataAccess->rootStartSect + (calculation / 512) + 1; 
     }
 
+    //^ TEMPORARY
+
+    void* buffer = kzalloc(4096);
+    diskstreamer_seek(private_data->fat_read_stream, (tempDataAccess->fatStartSect) * disk->sector_size);
+    diskstreamer_read(private_data->fat_read_stream, buffer, 4096);
+    diskstreamer_seek(private_data->fat_read_stream, 0);
+
     // Now read the root directory
     response = readRootDirectory(disk);
     if(response < 0) 

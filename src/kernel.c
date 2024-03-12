@@ -69,8 +69,13 @@ void print(const char* str)
 void printf(const char* str, const char* param1)
 {
     size_t len = strlen(str);
+    //bool escape_sequence = false;
     for (int i = 0; i < len; i++)
     {
+        // if(str[i] == '\\')
+        // {
+        //     escape_sequence = true;
+        // }
         if(str[i] == '%')
         {
             if((i + 1) != len)
@@ -80,6 +85,17 @@ void printf(const char* str, const char* param1)
                     print(param1);
                     i+=2; // skip over format specifer
                 }
+                // if(str[i + 1] == 'd')
+                // {
+                //     print((int)param1);
+                //     i+=2; // skip over format specifer
+                // }
+                // if(str[i + 1] == 'p')
+                // {
+                //     print("0x");
+                //     print((int)param1);
+                //     i+=2; // skip over format specifer
+                // }
             }
         }
         terminal_writechar(str[i], 15);
@@ -124,9 +140,22 @@ void kernel_main()
         void* out = kzalloc(1); // allocate 4096 bytes
         // read into out, element size 1 bytes, 10 of 1 bytes, from the filedescriptor
         fread(out, 1, 50, fd);
-        printf("I just got this: %s, from a file?", out);
+        printf("I just got this: %s, from a file?\n", out);
     }else{
-        print("Something did not work...");
+        print("Something did not work...\n");
+    }
+
+    int fd2 = fopen("0:/data/bello.txt", "r");
+    if (fd2)
+    {
+        print("\nWe opened hello.txt, it was inside test folder!\n");
+        
+        void* out = kzalloc(1); // allocate 4096 bytes
+        // read into out, element size 1 bytes, 10 of 1 bytes, from the filedescriptor
+        fread(out, 1, 50, fd2);
+        printf("I just got this: %s, from a file?\n", out);
+    }else{
+        print("Something did not work...\n");
     }
     while(1) {}
 }
