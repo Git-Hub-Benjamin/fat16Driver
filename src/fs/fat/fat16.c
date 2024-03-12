@@ -301,7 +301,7 @@ struct fat_directory_item* fat16_load_directory(struct disk* disk, int sector) /
     //private_data->helperData.dataRegionBeginningSector, private_data->headers.primary_header.sectors_per_cluster
     diskstreamer_seek(private_data->directory_stream, (sector * disk->sector_size)); 
     // this will set the position of the raw bytes to read
-    if(diskstreamer_read(private_data->directory_stream, buffer, sectorAmountReadSize) != 0)
+    if(diskstreamer_read(private_data->directory_stream, buffer, sectorAmountReadSize * disk->sector_size) != 0)
     {
         return ERROR(-EIO); // Error reading the directory / disk
     }
@@ -384,7 +384,7 @@ struct fat_directory_item* fat16_get_file(struct disk* disk, struct fat_director
         int clusterToRead = fat16_extract_cluster_start(tempFreeOldDirectory);
         // this will initally hold the cluster found in the entry, it may hold the one found in fat by the end of finding the entry
         int begginingSectorOfCluster = fat16ClusterToSectorCalculate(private_data, clusterToRead);
-        // now get the sector on the disk the cluster is at
+        // now get the sector on the disk the cluster is at 
         int sectorsReadSoFar = 0;
         // since we only read a certain amount sectors at a time from a cluster we need to keep track of which ones we have read so far
         while(true)
@@ -395,11 +395,11 @@ struct fat_directory_item* fat16_get_file(struct disk* disk, struct fat_director
             if(sectorsReadSoFar < sectorsPerCluster) // meaning we still have more to read if we have not found a match yet
             {
                 loadedDirectory = fat16_load_directory(disk,  (begginingSectorOfCluster + sectorsReadSoFar));
-                // load the directory of the cluster we are looking for, so we need to convert that to sectors then add the amount we have already read
-                tempFreeOldDirectory = loadedDirectory;
                 // we need to do this in case that when we find lets say 0:/bar/foo/dee/hello.txt, say we just found "foo" (in the line below), we need to have
                 // a pointer to the directoryEntry in memory so we can refrence its cluster on the next go around since path!=0 since it will still point to hello.txt
                 loadedDirectory = fat16_search_directory(loadedDirectory, path->part);
+                // load the directory of the cluster we are looking for, so we need to convert that to sectors then add the amount we have already read
+                tempFreeOldDirectory = loadedDirectory;
 
                 if(loadedDirectory != 0) 
                 {
@@ -482,6 +482,7 @@ int readRootDirectory(struct disk* disk)
     // read into the root directory
     if(diskstreamer_read(private_data->directory_stream, private_data->root_directory, bytesToRead) != PEACHOS_ALL_OK)
     {
+        // if error we need to free this
         kfree(private_data->root_directory);
         return -EIO;
     }
@@ -579,6 +580,7 @@ int fat16_resolve(struct disk* disk)
     struct Fat16Metadata* tempDataAccess = &private_data->helperData;
     struct fat_header* tempHeaderAccess = &private_data->headers.primary_header;
 
+    // read a max of 8 sectors (4096 bytes) at a time, aka our heap allocate size
     tempDataAccess->optimalSectorReadBlockSize = 
         private_data->headers.primary_header.sectors_per_cluster < 8 ? private_data->headers.primary_header.sectors_per_cluster : 8;
     
@@ -589,13 +591,13 @@ int fat16_resolve(struct disk* disk)
     tempDataAccess->rootStartSect = 
         tempHeaderAccess->reserved_sectors + (tempHeaderAccess->sectors_per_fat * tempHeaderAccess->fat_copies);
     
-
-    //! THIS IS A BS CALCULATION ONLY WORKS WHEN NICELY DIVIDED
     int calculation = tempHeaderAccess->root_dir_entries * sizeof(struct fat_directory_item);
 
-    tempDataAccess->dataStartSect = 
+    if (calculation % 512 == 0){ tempDataAccess->dataStartSect = 
         tempDataAccess->rootStartSect + (calculation / 512);
-
+    }else{
+        tempDataAccess->dataStartSect = tempDataAccess->rootStartSect + (calculation / 512) + 1; 
+    }
 
     // Now read the root directory
     response = readRootDirectory(disk);

@@ -116,16 +116,17 @@ void kernel_main()
     
     // Enable the system interrupts
     //enable_interrupts();
-    
-    int fd = fopen("0:/hello.txt", "r");
+    int fd = fopen("0:/data/hello.txt", "r");
     if (fd)
     {
-        print("\nWe opened hello.txt! Now trying to read...\n");
+        print("\nWe opened hello.txt, it was inside test folder!\n");
+        
         void* out = kzalloc(1); // allocate 4096 bytes
         // read into out, element size 1 bytes, 10 of 1 bytes, from the filedescriptor
-        fread(out, 1, 15, fd);
+        fread(out, 1, 50, fd);
         printf("I just got this: %s, from a file?", out);
+    }else{
+        print("Something did not work...");
     }
-    print("Something did not work...");
     while(1) {}
 }
